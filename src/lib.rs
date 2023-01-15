@@ -1,7 +1,7 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
 use anyhow::Result;
-use queue::Queue;
+use queue::{Queue, Stats};
 use serde_json::Value;
 use std::collections::HashMap;
 use tokio::sync::broadcast;
@@ -31,7 +31,7 @@ impl Redeez {
     pub fn queue(mut self, name: &str, handler: fn(Job) -> Result<()>) -> Self {
         self.queues.insert(
             name.to_string(),
-            Queue::new(self.client.clone(), name.to_string(), handler),
+            Queue::new(self.client.clone(), name, handler),
         );
 
         self
@@ -51,6 +51,17 @@ impl Redeez {
 
             tokio::spawn(async move { queue.listen(shutdown_signal) });
         }
+    }
+
+    #[must_use]
+    pub fn stats(&self) -> HashMap<&str, Stats> {
+        let mut stats = HashMap::new();
+
+        for (name, queue) in &self.queues {
+            stats.insert(name.as_str(), queue.stats().unwrap());
+        }
+
+        stats
     }
 
     pub fn shutdown(&mut self) {

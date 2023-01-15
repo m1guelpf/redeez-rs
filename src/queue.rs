@@ -32,47 +32,88 @@ impl Display for Job {
 }
 
 #[derive(Clone, Debug)]
+pub struct Keys {
+    pub failed: String,
+    pub pending: String,
+    pub recovery: String,
+    pub completed: String,
+}
+
+impl Keys {
+    fn new(name: &str) -> Self {
+        Self {
+            pending: name.to_string(),
+            failed: format!("{}.failed", &name),
+            recovery: format!("{}.pending", &name),
+            completed: format!("{}.completed", &name),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Copy)]
+pub struct Stats {
+    pub failed: usize,
+    pub pending: usize,
+    pub completed: usize,
+    pub processing: usize,
+}
+
+#[derive(Clone, Debug)]
 pub struct Queue {
-    name: String,
-    client: redis::Client,
+    pub queues: Keys,
+    pub client: redis::Client,
     handler: fn(Job) -> Result<()>,
 }
 
 impl Queue {
-    pub(crate) fn new(client: redis::Client, name: String, handler: fn(Job) -> Result<()>) -> Self {
+    pub(crate) fn new(client: redis::Client, name: &str, handler: fn(Job) -> Result<()>) -> Self {
         Self {
-            name,
             client,
             handler,
+            queues: Keys::new(name),
         }
+    }
+
+    pub(crate) fn stats(&self) -> Result<Stats> {
+        let mut con = self.client.get_connection().unwrap();
+
+        let (pending, failed, completed, processing): (usize, usize, usize, usize) = redis::pipe()
+            .llen(&self.queues.pending)
+            .llen(&self.queues.failed)
+            .llen(&self.queues.completed)
+            .llen(&self.queues.recovery)
+            .query(&mut con)?;
+
+        Ok(Stats {
+            failed,
+            pending,
+            completed,
+            processing,
+        })
     }
 
     pub(crate) fn dispatch(&self, payload: Value) {
         let mut con = self.client.get_connection().unwrap();
 
         let _: () = con
-            .lpush(&self.name, Job::with_data(payload).to_string())
+            .lpush(&self.queues.pending, Job::with_data(payload).to_string())
             .unwrap();
     }
 
     pub(crate) fn listen(&self, mut shutdown: broadcast::Receiver<()>) -> Result<()> {
         let mut con = self.client.get_connection().unwrap();
 
-        let failed_queue = format!("{}.failed", &self.name);
-        let pending_queue = format!("{}.pending", &self.name);
-        let completed_queue = format!("{}.completed", &self.name);
-
         while shutdown.try_recv().is_err() {
-            let Ok(payload) = con.brpoplpush::<_, String>(&self.name, &pending_queue, 5) else {
+            let Ok(payload) = con.brpoplpush::<_, String>(&self.queues.pending, &self.queues.recovery, 5) else {
                 continue
             };
 
             match (self.handler)(Job::from_string(&payload)?) {
-                Ok(()) => con.lpush(&completed_queue, payload)?,
-                Err(_) => con.lpush(&failed_queue, payload)?,
+                Ok(()) => con.lpush(&self.queues.completed, &payload)?,
+                Err(_) => con.lpush(&self.queues.failed, &payload)?,
             }
 
-            con.rpop::<_, ()>(&pending_queue, None).unwrap();
+            con.lrem::<_, _, ()>(&self.queues.recovery, 1, &payload)?;
         }
 
         Ok(())
