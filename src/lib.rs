@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use redeez_rs::{Job, Redeez};
+//! use redeez::{Job, Redeez};
 //! use serde_json::json;
 //! use anyhow::Result;
 //!

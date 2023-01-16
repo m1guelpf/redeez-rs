@@ -1,5 +1,5 @@
 use anyhow::Result;
-use redeez_rs::{Job, Redeez};
+use redeez::{Job, Redeez};
 use serde_json::json;
 
 #[tokio::main]

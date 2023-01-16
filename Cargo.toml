@@ -1,8 +1,8 @@
 [package]
 license = "MIT"
+name = "redeez"
 edition = "2021"
 version = "0.1.0"
-name = "redeez-rs"
 readme = "README.md"
 keywords = ["redis", "queue", "async"]
 categories = ["database", "asynchronous"]
