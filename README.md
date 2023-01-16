@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/lvkdotsh/redeez/raw/master/public/redeez_white.png" />
-    <img alt="redeez" src="https://github.com/v3xlabs/redeez/raw/master/public/redeez_black.png" width="400px" />
-  </picture>
+    <img alt="redeez" src="https://user-images.githubusercontent.com/23558090/212579573-7c20962e-0b79-46e8-9079-02a4b43d654f.png" width="400px" />
 </p>
 
 <div align="center">
@@ -16,6 +13,8 @@
     <img src="https://img.shields.io/badge/docs-latest-blue.svg" alt="docs.rs" />
   </a>
 </div>
+
+---
 
 A simplified general-purpose queueing system for Rust apps.
 
