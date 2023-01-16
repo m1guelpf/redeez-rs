@@ -6,9 +6,12 @@ use std::fmt::{Display, Formatter};
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
+/// A job to be processed by a queue.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Job {
-    id: String,
+    /// Unique ID of the job.
+    pub id: String,
+    /// Data to be processed by the queue.
     pub payload: Value,
 }
 
@@ -50,11 +53,16 @@ impl Keys {
     }
 }
 
+/// Statistics about a queue.
 #[derive(Clone, Debug, Copy)]
 pub struct Stats {
+    /// Number of failed jobs.
     pub failed: usize,
+    /// Number of pending jobs.
     pub pending: usize,
+    /// Number of completed jobs.
     pub completed: usize,
+    /// Number of jobs currently being processed.
     pub processing: usize,
 }
 
@@ -100,6 +108,15 @@ impl Queue {
             .unwrap();
     }
 
+    /// Listen for jobs on the queue and process them
+    ///
+    /// # Arguments
+    ///
+    /// * `shutdown` - A broadcast receiver that will be used to shutdown the queue
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the connection to redis fails.
     pub(crate) fn listen(&self, mut shutdown: broadcast::Receiver<()>) -> Result<()> {
         let mut con = self.client.get_connection().unwrap();
 
