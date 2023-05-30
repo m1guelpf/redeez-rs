@@ -36,14 +36,16 @@
 //! }
 //! ```
 
-use anyhow::Result;
+use error::Result;
 use queue::Queue;
 use serde_json::Value;
 use std::collections::HashMap;
 use tokio::sync::broadcast;
 
 mod queue;
+mod error;
 pub use queue::{Job, Stats};
+pub use error::Error;
 
 /// A general-purpose queueing system for Rust apps.
 pub struct Redeez {
