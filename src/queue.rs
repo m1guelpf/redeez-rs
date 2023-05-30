@@ -121,7 +121,7 @@ impl Queue {
         let mut con = self.client.get_connection().unwrap();
 
         while shutdown.try_recv().is_err() {
-            let Ok(payload) = con.brpoplpush::<_, String>(&self.queues.pending, &self.queues.recovery, 5) else {
+            let Ok(payload) = con.brpoplpush::<_, _, String>(&self.queues.pending, &self.queues.recovery, 5) else {
                 continue
             };
 
