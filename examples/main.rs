@@ -1,4 +1,4 @@
-use redeez::{Job, Redeez, Error};
+use redeez::{Error, Job, Redeez};
 use serde_json::json;
 
 #[tokio::main]
