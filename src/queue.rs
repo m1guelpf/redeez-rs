@@ -1,4 +1,4 @@
-use anyhow::Result;
+use crate::error::Result;
 use redis::Commands;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

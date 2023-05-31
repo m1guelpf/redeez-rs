@@ -36,13 +36,15 @@
 //! }
 //! ```
 
-use anyhow::Result;
+use error::Result;
 use queue::Queue;
 use serde_json::Value;
 use std::collections::HashMap;
 use tokio::sync::broadcast;
 
+mod error;
 mod queue;
+pub use error::Error;
 pub use queue::{Job, Stats};
 
 /// A general-purpose queueing system for Rust apps.

@@ -1,5 +1,4 @@
-use anyhow::Result;
-use redeez::{Job, Redeez};
+use redeez::{Error, Job, Redeez};
 use serde_json::json;
 
 #[tokio::main]
@@ -19,7 +18,7 @@ async fn main() {
     queues.shutdown();
 }
 
-fn resize_avatars(job: Job) -> Result<()> {
+fn resize_avatars(job: Job) -> Result<(), Error> {
     let images = job
         .payload
         .as_array()
@@ -34,7 +33,7 @@ fn resize_avatars(job: Job) -> Result<()> {
     Ok(())
 }
 
-fn resize_images(job: Job) -> Result<()> {
+fn resize_images(job: Job) -> Result<(), Error> {
     let images = job
         .payload
         .as_array()
