@@ -32,7 +32,7 @@
 //!     // -- snip --
 //!
 //!    // Shutdown the queues.
-//!     queues.shutdown();
+//!     queues.shutdown().unwrap();
 //! }
 //! ```
 
@@ -79,10 +79,12 @@ impl Redeez {
     }
 
     /// Dispatches a job to the queue with the given name.
-    pub fn dispatch(&self, name: &str, payload: Value) {
+    pub fn dispatch(&self, name: &str, payload: Value) -> Result<()> {
         if let Some(queue) = self.queues.get(name) {
-            queue.dispatch(payload);
+            queue.dispatch(payload)?;
         }
+
+        Ok(())
     }
 
     /// Starts listening for new jobs on all queues.
@@ -98,18 +100,16 @@ impl Redeez {
 
     /// Returns a map of queue names to their stats.
     ///
-    /// # Panics
-    ///
-    /// This function will panic if any of the queues fail to return their stats.
+    /// If any queue fails to return stats the function will error.
     #[must_use]
-    pub fn stats(&self) -> HashMap<&str, Stats> {
+    pub fn stats(&self) -> Result<HashMap<&str, Stats>> {
         let mut stats = HashMap::new();
 
         for (name, queue) in &self.queues {
-            stats.insert(name.as_str(), queue.stats().unwrap());
+            stats.insert(name.as_str(), queue.stats()?);
         }
 
-        stats
+        Ok(stats)
     }
 
     /// Shuts down the Redeez instance and stops listening for new jobs.
@@ -117,7 +117,8 @@ impl Redeez {
     /// # Panics
     ///
     /// This function will panic if the shutdown signal fails to send.
-    pub fn shutdown(&mut self) {
-        self.shutdown_signal.send(()).unwrap();
+    pub fn shutdown(&mut self) -> Result<()> {
+        self.shutdown_signal.send(())?;
+        Ok(())
     }
 }

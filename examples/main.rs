@@ -10,12 +10,12 @@ async fn main() {
         .queue("images:resize", resize_images);
     queues.listen();
 
-    queues.dispatch("images:resize", json!(["image1.jpg", "image2.jpg"]));
-    queues.dispatch("avatars:resize", json!(["avatar1.jpg", "avatar2.jpg"]));
+    queues.dispatch("images:resize", json!(["image1.jpg", "image2.jpg"])).expect("Failed to dispatch job.");
+    queues.dispatch("avatars:resize", json!(["avatar1.jpg", "avatar2.jpg"])).expect("Failed to dispatch job.");
 
     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
 
-    queues.shutdown();
+    queues.shutdown().unwrap();
 }
 
 fn resize_avatars(job: Job) -> Result<(), Error> {

@@ -30,7 +30,7 @@ impl Job {
 
 impl Display for Job {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&serde_json::to_string(&self).unwrap())
+        f.write_str(&serde_json::to_string(&self).unwrap_or(format!("Job: id={}, payload=failed to serialize", self.id)))
     }
 }
 
@@ -83,7 +83,7 @@ impl Queue {
     }
 
     pub(crate) fn stats(&self) -> Result<Stats> {
-        let mut con = self.client.get_connection().unwrap();
+        let mut con = self.client.get_connection()?;
 
         let (pending, failed, completed, processing): (usize, usize, usize, usize) = redis::pipe()
             .llen(&self.queues.pending)
@@ -100,12 +100,13 @@ impl Queue {
         })
     }
 
-    pub(crate) fn dispatch(&self, payload: Value) {
-        let mut con = self.client.get_connection().unwrap();
+    pub(crate) fn dispatch(&self, payload: Value) -> Result<()> {
+        let mut con = self.client.get_connection()?;
 
-        let _: () = con
-            .lpush(&self.queues.pending, Job::with_data(payload).to_string())
-            .unwrap();
+        let res: () = con
+            .lpush(&self.queues.pending, Job::with_data(payload).to_string())?;
+
+        Ok(res)
     }
 
     /// Listen for jobs on the queue and process them
@@ -113,12 +114,8 @@ impl Queue {
     /// # Arguments
     ///
     /// * `shutdown` - A broadcast receiver that will be used to shutdown the queue
-    ///
-    /// # Panics
-    ///
-    /// This function will panic if the connection to redis fails.
     pub(crate) fn listen(&self, mut shutdown: broadcast::Receiver<()>) -> Result<()> {
-        let mut con = self.client.get_connection().unwrap();
+        let mut con = self.client.get_connection()?;
 
         while shutdown.try_recv().is_err() {
             let Ok(payload) = con.brpoplpush::<_, _, String>(&self.queues.pending, &self.queues.recovery, 5) else {
