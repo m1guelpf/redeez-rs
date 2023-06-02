@@ -34,7 +34,7 @@ impl Display for Job {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Keys {
     pub failed: String,
     pub pending: String,
@@ -54,7 +54,7 @@ impl Keys {
 }
 
 /// Statistics about a queue.
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Stats {
     /// Number of failed jobs.
     pub failed: usize,
