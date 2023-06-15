@@ -30,7 +30,10 @@ impl Job {
 
 impl Display for Job {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&serde_json::to_string(&self).unwrap_or(format!("Job: id={}, payload=failed to serialize", self.id)))
+        f.write_str(
+            &serde_json::to_string(&self)
+                .unwrap_or(format!("Job: id={}, payload=failed to serialize", self.id)),
+        )
     }
 }
 
@@ -103,8 +106,7 @@ impl Queue {
     pub(crate) fn dispatch(&self, payload: Value) -> Result<()> {
         let mut con = self.client.get_connection()?;
 
-        let res: () = con
-            .lpush(&self.queues.pending, Job::with_data(payload).to_string())?;
+        let res: () = con.lpush(&self.queues.pending, Job::with_data(payload).to_string())?;
 
         Ok(res)
     }
