@@ -126,7 +126,7 @@ impl Queue {
                 &self.queues.recovery,
                 Direction::Right,
                 Direction::Left,
-                5,
+                5.0,
             ) else {
                 continue;
             };
