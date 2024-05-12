@@ -1,5 +1,5 @@
 use crate::error::Result;
-use redis::Commands;
+use redis::{Commands, Direction};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::{Display, Formatter};
@@ -121,8 +121,14 @@ impl Queue {
         let mut con = self.client.get_connection().unwrap();
 
         while shutdown.try_recv().is_err() {
-            let Ok(payload) = con.brpoplpush::<_, _, String>(&self.queues.pending, &self.queues.recovery, 5) else {
-                continue
+            let Ok(payload) = con.blmove::<_, _, String>(
+                &self.queues.pending,
+                &self.queues.recovery,
+                Direction::Right,
+                Direction::Left,
+                5,
+            ) else {
+                continue;
             };
 
             match (self.handler)(Job::from_string(&payload)?) {
